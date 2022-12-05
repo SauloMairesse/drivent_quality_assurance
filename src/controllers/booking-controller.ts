@@ -7,34 +7,54 @@ export async function getBookingController(req: AuthenticatedRequest, res: Respo
   const { userId } = req;
 
   try {
-    const variable = await bookingService.getBookingService();
+    const booking = await bookingService.getBooking(userId);
 
-    return res.status(httpStatus.OK).send(variable);
+    return res.status(httpStatus.OK).send(booking);
   } catch (error) {
-    return res.sendStatus(httpStatus.NOT_FOUND);
+    if (error.name === "NotFoundError") {
+      return res.sendStatus(httpStatus.NOT_FOUND);
+    }
+    return res.sendStatus(httpStatus.BAD_REQUEST);
   }
 }
 
 export async function postBookingController(req: AuthenticatedRequest, res: Response) {
-  try {
-    await bookingService.postBookingService();
+  const roomId: number  = req.body.roomId;
+  const { userId } = req;
 
-    return res.sendStatus(httpStatus.OK);
+  try {
+    const bookingId = await bookingService.postBookingService(userId, roomId);
+
+    return res.status(httpStatus.OK).send(bookingId);
   } catch (error) {
+    if (error.name === "roomIdInvalid") {
+      return res.sendStatus(httpStatus.NOT_FOUND);
+    }
+    if (error.name === "enrolllmentOfUserNotFound") {
+      return res.sendStatus(httpStatus.NOT_FOUND);
+    }
+    if (error.name === "ticketInvalid") {
+      return res.sendStatus(httpStatus.NOT_FOUND);
+    }
     return res.sendStatus(httpStatus.BAD_REQUEST);
   }
 }
 
 export async function putBookingController(req: AuthenticatedRequest, res: Response) {
-  const { cep } = req.query as Record<string, string>;
+  const { userId } = req;
+  const { roomId } = req.body;
 
   try {
-    const variable = await bookingService.putBookingService();
+    const variable = await bookingService.putBookingService(userId, roomId);
 
     return res.status(httpStatus.OK).send(variable);
   } catch (error) {
     if (error.name === "NotFoundError") {
       return res.sendStatus(httpStatus.NOT_FOUND);
     }
+    if (error.name === "roomIdInvalid") {
+      return res.sendStatus(httpStatus.NOT_FOUND);
+    }
+    return res.sendStatus(httpStatus.BAD_REQUEST);
   }
 }
